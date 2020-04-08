@@ -1,3 +1,5 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -21,19 +23,7 @@
   	<div id="leftcolumn">
   		
   		
-  		<form action="Project3" method="post">
-  			<p>Welcome! Please log in.</p>
-  			<div class="form-line">
-  				<label for="username">Username:</label>
-  				<input type="text" name="username"></input>
-  			</div>
-  			
-  			<div class="form-line">
-  				<label for="password">Password:</label>
-  				<input type="password" name="password"></input>
-  			</div>
-  			<input type="submit" Value="Log In"></input>
-  		</form> 
+  		
   	</div>
   	<!-- End Left Column -->
   
@@ -50,3 +40,4 @@
 <!-- End Wrapper -->
 </body>
 </html>
+    
