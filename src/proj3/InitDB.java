@@ -79,7 +79,7 @@ public class InitDB extends HttpServlet {
 		}
 		
 		String statement= "CREATE TABLE patients ("
-                + "ID VARCHAR(10) NOT NULL,"
+                + "ID INT(11) NOT NULL,"
                 + "RESULT VARCHAR(10) NOT NULL,"
                 + "PRED VARChAR(10) NOT NULL,"
                 + "PROTEINS VARCHAR(60000) NOT NULL,"
