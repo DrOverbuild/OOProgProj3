@@ -45,25 +45,7 @@
   
   	<!-- Begin Right Column -->
  	<div id="rightcolumn" style="display:none">
- 		<form class="small">
- 			<div class="form-line-small">
- 				<label for="id">ID:</label>
- 				<input type="text" id="id" name="id"></input>
- 			</div>
- 			<div class="form-line-small">
- 				<label for="result">Result:</label>
- 				<input id="result" name="result" type="text"></input>
- 			</div>
- 			<div class="form-line-small">
- 				<label for="pred">Prediction:</label>
- 				<input id="pred" name="pred" type="text"></input>
- 			</div>
- 			<div class="form-line-small">
- 				<button class="destructive">Delete</button>
- 				<button class="normal">Predict</button>
- 				<button class="save">Save</button>
- 			</div>
- 		</form>
+ 		
  	</div>
   	<!-- End Right Column -->
   

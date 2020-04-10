@@ -102,8 +102,13 @@ form.small {
 	color: #E0E0E2;
 }
 
-.form-line-small button.destructive {
+.form-line-small button.delete {
 	background-color: #662415;
+	color: #E0E0E2;
+}
+
+.form-line-small button.predict{
+	background-color: #515177;
 	color: #E0E0E2;
 }
 
