@@ -1,3 +1,7 @@
+// Jasper Reddin
+// OOP with Java - Spring 2020
+// Mark Doderer
+
 package proj3;
 
 import java.io.IOException;
@@ -12,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet implementation class InitDB
+ * Small servlet to initialize the database with the right table structure. This will never be on a production web server.
  */
 @WebServlet("/InitDB")
 public class InitDB extends HttpServlet {
@@ -20,24 +24,14 @@ public class InitDB extends HttpServlet {
        
 	public final static String CONN_URL = "jdbc:mysql://localhost:3306/patients?user=reader&password=readDBdat@";
 	
-	// table record structure:
-	// |id|result|prediction|protein1|...|protein4776|
-	
 	Connection conn = null;
 	
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
     public InitDB() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		// set up the connection
 		makeDBConnection();
 		
 		if (conn != null) {
@@ -47,8 +41,8 @@ public class InitDB extends HttpServlet {
 
 		}
 		
+		// build the table
 		buildTables(response);
-//		buildTables();
 	}
 
 	/**
@@ -59,6 +53,7 @@ public class InitDB extends HttpServlet {
 		doGet(request, response);
 	}
 	
+	// establishes the database connection
 	protected void makeDBConnection() {
 		if (conn != null) {
 			return;
@@ -68,15 +63,19 @@ public class InitDB extends HttpServlet {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			conn = java.sql.DriverManager.getConnection(CONN_URL);
 		} catch (SQLException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
 	
+	// builds the patients table
 	protected void buildTables(HttpServletResponse response) throws IOException {
 		if (conn == null) {
 			return;
 		}
+		
+		// table record structure:
+		// |  id  |  result  |  prediction  |  protein1,protein2,...,protein4776  |
+		//   int     varchar     varchar       bigger varchar
 		
 		String statement= "CREATE TABLE patients ("
                 + "ID INT(11) NOT NULL,"
@@ -85,6 +84,7 @@ public class InitDB extends HttpServlet {
                 + "PROTEINS VARCHAR(60000) NOT NULL,"
                 + "PRIMARY KEY (ID))";
 		
+		// execute the statement
 		try {
 			PreparedStatement st = conn.prepareStatement(statement);
 			st.execute();

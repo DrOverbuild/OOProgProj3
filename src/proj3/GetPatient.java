@@ -1,3 +1,6 @@
+// Jasper Reddin
+// OOP with Java - Spring 2020
+// Mark Doderer
 package proj3;
 
 import patientpredictor.*;
@@ -14,9 +17,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Servlet implementation class Patient
- */
+// Servlet that handles loading, adding, and editing a single patient
 @WebServlet("/GetPatient")
 public class GetPatient extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -25,6 +26,7 @@ public class GetPatient extends HttpServlet {
 
 	public Connection conn = null;
 	
+	// sets up DB connection
 	protected void makeDBConnection() {
 		if (conn != null) {
 			return;
@@ -34,32 +36,38 @@ public class GetPatient extends HttpServlet {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			conn = java.sql.DriverManager.getConnection(CONN_URL);
 		} catch (SQLException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
 	
+	// select patient from database and return it
 	protected Patient loadPatient(String id, boolean includeProteins) {
+		// do nothing if connection failed
 		if (conn == null) {
 			return null;
 		}
 		
 		try {
-			
+			// check if we want to load proteins in our query (we don't unless we are using them to make predictions) 
 			String proteinsAddition = "";
-			
 			if (includeProteins) {
 				proteinsAddition = ",proteins";
 			}
 			
+			// set up statement and execute
 			PreparedStatement statement = conn.prepareStatement("SELECT id,result,pred" + proteinsAddition + " FROM patients WHERE id = ?");
 			int idInt = Integer.parseInt(id);
 			statement.setInt(1, idInt);
 			ResultSet rs = statement.executeQuery();
 			
+			// there should only be one row returned (or zero) because id is a primary key
+			// so, select last (only) item in resultset
 			if  (rs.last()) {
+				// grab data from result set and put it into new patient object
 				String result = rs.getString(2);
 				String pred = rs.getString(3);
+				
+				// use empty proteins array if we're not using the proteins for this request
 				double[] proteins = new double[]{};
 				
 				if (includeProteins) {
@@ -78,20 +86,22 @@ public class GetPatient extends HttpServlet {
 				return patient;
 			}
 		} catch (SQLException | NumberFormatException e) {
-			
 			e.printStackTrace();
-			// TODO: handle exception
 		}
 		
 		return null;
 	}
 	
+	// update patient in database
+	// note: ignores changes to the proteins
 	protected void updatePatient(Patient p) {
+		// do nothing if connection failed
 		if (conn == null) {
 			return;
 		}
 		
 		try {
+			// set up statement and execute
 			PreparedStatement st = conn.prepareStatement("UPDATE patients SET result = ?, pred = ? WHERE id = ?");
 			st.setString(1, p.getTreatmentResults());
 			st.setString(2, p.getPrediction());
@@ -102,59 +112,66 @@ public class GetPatient extends HttpServlet {
 			
 			st.executeUpdate();
 		} catch (SQLException e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 	}
 	
 	protected void deletePatient(String id) {
+		// do nothing if connection failed
 		if (conn == null) {
 			return;
 		}
 		
 		try {
+			// set up statement
 			PreparedStatement statement = conn.prepareStatement("DELETE FROM patients WHERE id = ?");
 			int idInt = Integer.parseInt(id);
 			statement.setInt(1, idInt);
 			
+			// execute
 			statement.executeUpdate();
 		} catch (SQLException e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 	}
 	
+	// insert patient into database
 	protected void insertPatient(String id, String result, String pred, String proteins) {
+		// do nothing if connection failed
 		if (conn == null) {
 			return;
 		}
 		
 		try {
+			// set up statement
 			PreparedStatement statement = conn.prepareStatement("INSERT INTO patients (id, result, pred, proteins) VALUES (?, ?, ?, ?)");
 			statement.setString(1, id);
 			statement.setString(2, result);
 			statement.setString(3, pred);
 			statement.setString(4, proteins);
+			
+			// execute
 			statement.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
-			// TODO: handle exception
 		}
 	}
 	
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
     public GetPatient() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
 	/**
+	 * Get request: depending on the parameter this will send html code to add to the right column,
+	 *  update a patient, make a prediction, or delete a patient
+	 * 
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+		// check if signed in
 		if (request.getSession().getAttribute("signed_in") != null && (boolean)request.getSession().getAttribute("signed_in")) {
 			
+			// if there's no id provided, we want to send a form for user to add a new patient
 			if (request.getParameter("id")==null) {
 				response.getWriter().append("<form class=\"small\">\n" + 
 						" 			<div class=\"form-line-small\">\n" + 
@@ -180,26 +197,27 @@ public class GetPatient extends HttpServlet {
 				return;
 			}
 			
+			// otherwise, we need to get the id
 			makeDBConnection();
 			String id = "";
+			id = (String)request.getParameter("id");
 			
-			if (request.getParameter("id") != null) {
-				id = (String)request.getParameter("id");
-			} else {
-				response.getWriter().append("Please provide patient id.");
-				return;
-			}
-			
+			// decide if we need to predict, delete, or update patient
 			if (request.getParameter("predict") != null) {
+				// we are making a prediction
+				// load patient (with proteins), set the prediction, then update the patient
 				Patient patient = loadPatient(id, true);
 				patient.setPrediction(patientpredictor.Predictor.predict(patient));
 				updatePatient(patient);
 			} else if (request.getParameter("delete") != null) {
+				// we're deleting the patient
 				deletePatient(id);
 			} else if (request.getParameter("save") != null) {
+				// we're updating the result or prediction of the patient by hand
 				String result;
 				String pred;
 				
+				// make sure we have all the parameters
 				if (request.getParameter("result") != null) {
 					result = (String)request.getParameter("result");
 				} else {
@@ -214,10 +232,12 @@ public class GetPatient extends HttpServlet {
 					return;
 				}
 				
-				
+				// build a new patient and update it
 				Patient patient = new Patient(result, pred, id, new double[]{});
 				updatePatient(patient);
 			} else {
+				// nothing else except an id is provided, so we're just loading the patient 
+				// and giving a form for user to update
 				Patient patient = loadPatient(id, false);
 				if (patient == null) {
 					response.getWriter().append("Could not load patient");
@@ -249,17 +269,21 @@ public class GetPatient extends HttpServlet {
 	}
 
 	/**
+	 * If a post request was sent, we want to add a patient
+	 * 
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		
+		// make sure we're signed in
 		if (request.getSession().getAttribute("signed_in") != null && (boolean)request.getSession().getAttribute("signed_in")) {
+			// make sure 'add' parameter exists
 			if (request.getParameter("add") != null) {
 				String id = "";
 				String result = "";
 				String pred = "";
 				String proteinsStr = "";
+				
+				// make sure we have all the other parameters
 				
 				if (request.getParameter("id") != null) {
 					id = (String)request.getParameter("id");
@@ -279,7 +303,6 @@ public class GetPatient extends HttpServlet {
 					return;
 				}
 				
-				
 				if (request.getParameter("pred") != null) {
 					pred = (String)request.getParameter("pred");
 					
@@ -298,15 +321,15 @@ public class GetPatient extends HttpServlet {
 					return;
 				}
 				
-				
+				// make sure we have the right number of proteins
 				String[] proteinsStrArr = proteinsStr.split(",");
 				if (proteinsStrArr.length != 4776) {
 					response.getWriter().append("Not enough proteins.");
 					return;
 				}
 				
+				// make the connection and execute the insertion
 				makeDBConnection();
-				
 				insertPatient(id, result, pred, proteinsStr);
 				response.getWriter().append("Success");
 				

@@ -1,3 +1,7 @@
+// Jasper Reddin
+// OOP with Java - Spring 2020
+// Mark Doderer
+
 package proj3;
 
 import java.io.File;
@@ -24,7 +28,8 @@ import patientpredictor.Patient;
 import patientpredictor.PatientCollection;
 
 /**
- * Servlet implementation class Project3
+ * Loads all patients, builds an html table, and sends the table to a jsp page
+ * 
  */
 @WebServlet("/Project3")
 public class Project3 extends HttpServlet {
@@ -36,54 +41,50 @@ public class Project3 extends HttpServlet {
 	// |id|result|prediction|proteins|
 	
 	Connection conn = null;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
+      
     public Project3() {
         super();
         // TODO Auto-generated constructor stub
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
+    // if signed in, load the table.
+    // if the logout param was added (from the logout link), delete the session and refer the user to the log in page
+    // if not, just refer the user to the log in page
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-//		response.getWriter().append("Served at: ").append(request.getContextPath());
-		
+		// check if signed in
+		// the session attributes are stored on the server side and cannot be modified by the client, but they get a cookie
+		// with a session id that matches with the sessions on the server.
+		// therefore it is safe to check if a user is signed in like this
 		if (request.getSession().getAttribute("signed_in") != null && (boolean)request.getSession().getAttribute("signed_in")) {
 			
+			// if logout parameter is set, remove the signed in attribute and send user to the log in page
 			if (request.getParameter("logout") != null) {
 				request.getSession().removeAttribute("signed_in");
 				request.setAttribute("error", "You have logged out. Please <a href='./index.html'>Log in</a>.");
 			} else {
+				// otherwise, build the table
 				signedIn(request);
 			}
 			
 			
 		} else {
-			request.setAttribute("error", "Please log in.");
+			request.setAttribute("error", "Please <a href='./index.html'>Log in</a>.");
 		}
 		
 		// send to jsp
+		// there will be one of two attributes that the jsp page will check for and only add it if it exists: error, and patients_table
 		RequestDispatcher rd = request.getRequestDispatcher("/patients.jsp");
 		rd.forward(request,response);  //forwarded to patients.jsp
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
+	// the post request means the user is coming from the sign in page
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-//		doGet(request, response);
-		// check password
-		
+		// check if already signed in
 		if (request.getSession().getAttribute("signed_in") != null && (boolean)request.getSession().getAttribute("signed_in")) {
 			signedIn(request);
 		} else {
 			if (request.getParameter("username") != null && request.getParameter("password") != null) {
-				// normally I would be checking this with a database but I don't have time to set the user database up
+				// normally I would be checking this with a database but I don't have time to set the user table up
 				// plus, it's not required so I'm not going to worry about it
 				if (request.getParameter("username").equals("md") && request.getParameter("password").equals("pw")) {
 					request.getSession().setAttribute("signed_in", true);
@@ -101,6 +102,7 @@ public class Project3 extends HttpServlet {
 		rd.forward(request,response);  //forwarded to patients.jsp
 	}
 	
+	// set up database connection
 	protected void makeDBConnection() {
 		if (conn != null) {
 			return;
@@ -110,11 +112,11 @@ public class Project3 extends HttpServlet {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			conn = java.sql.DriverManager.getConnection(CONN_URL);
 		} catch (SQLException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 	}
 	
+	// loads the patients from the database and builds an html table to send to the jsp page
 	protected void signedIn(HttpServletRequest request) {
 		// set up db connecdtion
 		makeDBConnection();
@@ -124,13 +126,14 @@ public class Project3 extends HttpServlet {
 			return;
 		}
 		
-		// send data from file to database
+		// send data from file to database if needed
 		importPatientsIntoDatabase(request);
 		
 		// build table of patients
 		loadPatients(request);	
 	}
 	
+	// imports patient data from file if the table is empty
 	protected void importPatientsIntoDatabase(HttpServletRequest request) {
 		try { 
 			// check if patients need to be loaded in (empty table)
@@ -175,25 +178,33 @@ public class Project3 extends HttpServlet {
 		}
 	}
 	
+	// loads the id, result, and pred from all patients of the database and builds a table with them
 	protected void loadPatients(HttpServletRequest request) {
 		try {
+			// set up statement and execute
 			PreparedStatement st = conn.prepareStatement("SELECT id, result, pred FROM patients.patients ORDER BY id ASC");
 			ResultSet rs = st.executeQuery(); 
 			
+			// start stringbuilder
 			StringBuilder table = new StringBuilder("<table><tr><td>Patient ID</td><td>Result</td><td>Prediction</td></tr>\n");
 			
+			// for each row in the result set
 			while (rs.next()) {
+				// get id, result, and prediction
 				String id = rs.getString(1);
 				String result = rs.getString(2);
 				String pred = rs.getString(3);
 				
+				// add all three to a new table row
 				table.append("<tr data-patient-id=\"").append(id).append("\"><td>")
 					.append(id).append("</td><td>").append(result).append("</td><td>")
 					.append(pred).append("</td></tr>\n");
 			}
 			
+			// conclude the html
 			table.append("</table>\n");
 			
+			// send to the request to send to the jsp
 			request.setAttribute("patients_table", table.toString());
 			
 			rs.close();
