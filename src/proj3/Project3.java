@@ -53,7 +53,15 @@ public class Project3 extends HttpServlet {
 //		response.getWriter().append("Served at: ").append(request.getContextPath());
 		
 		if (request.getSession().getAttribute("signed_in") != null && (boolean)request.getSession().getAttribute("signed_in")) {
-			signedIn(request);
+			
+			if (request.getParameter("logout") != null) {
+				request.getSession().removeAttribute("signed_in");
+				request.setAttribute("error", "You have logged out. Please <a href='./index.html'>Log in</a>.");
+			} else {
+				signedIn(request);
+			}
+			
+			
 		} else {
 			request.setAttribute("error", "Please log in.");
 		}

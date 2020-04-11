@@ -13,12 +13,16 @@
 <!-- Begin Wrapper -->
 <div id="wrapper">
   <!-- Begin Header -->
-  <div id="header"><h1>My Patients</h1></div>
+	<div id="header">
+  		<h1>My Patients</h1>
+  		<a class="right-aligned-nav-button add">Add New Patient</a>
+  		<a class="right-aligned-nav-button logout" href="./Project3?logout">Logout</a>
+	</div>
   <!-- End Header -->
   
   <!-- Begin Navigation -->
-<!--   <div id="navigation"> Navigation Here </div> --> 
- <!-- End Navigation -->
+<!--   <div id="navigation"></div>
+ --> <!-- End Navigation -->
   
   <div id="main-content">
   	<!-- Begin Left Column -->
